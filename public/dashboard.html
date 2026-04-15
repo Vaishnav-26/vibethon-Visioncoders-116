@@ -309,6 +309,17 @@
       </p>
     </div>
 
+    <div class="glass p-6 rounded-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="font-bold font-display">Video Lecture Library</h3>
+          <p class="text-xs" style="color:var(--clr-muted)">Play curated AI lessons directly inside the dashboard.</p>
+        </div>
+        <button onclick="renderVideoLibrary()" class="btn-glass text-xs px-3 py-1.5">Refresh Library</button>
+      </div>
+      <div id="video-library" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+    </div>
+
     <!-- Lesson Output -->
     <div id="lesson-output" class="hidden glass p-6 rounded-2xl"></div>
   </div><!-- /panel-lesson -->
@@ -451,18 +462,13 @@
         <h3 class="text-xl font-bold font-display">Learning Modules</h3>
         <p class="text-sm" style="color:var(--clr-muted)">Pick up where you left off</p>
       </div>
-      <button onclick="switchMainTab('lesson')" class="btn-primary text-sm px-4 py-2">
-        <i data-lucide="sparkles" class="w-4 h-4"></i> AI Generate
-      </button>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+      <button onclick="switchMainTab('lesson'); generateLesson()" class="btn-primary text-sm px-4 py-2">
 
       <!-- Module Card Template: Decision Trees -->
       <article class="module-card glass p-0 rounded-2xl overflow-hidden animate-fade-up animate-fade-up-1">
         <!-- YouTube Thumbnail Placeholder -->
         <div class="relative cursor-pointer group" style="aspect-ratio:16/9;background:linear-gradient(135deg,#0f0c29,#302b63);overflow:hidden"
-             onclick="window.open('https://www.youtube.com/results?search_query=decision+trees+machine+learning+tutorial','_blank')">
+             onclick="openModuleLesson('decision-trees')">
           <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
             <div class="w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
                  style="background:rgba(255,0,0,0.9);box-shadow:0 0 24px rgba(255,0,0,0.5)">
@@ -488,14 +494,14 @@
             <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">Gini</span>
             <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">Pruning</span>
           </div>
-          <button onclick="switchMainTab('lesson')" class="btn-primary w-full text-sm py-2.5"><i data-lucide="play" class="w-3.5 h-3.5"></i> Continue Learning</button>
+          <button onclick="openModuleLesson('decision-trees')" class="btn-primary w-full text-sm py-2.5"><i data-lucide="play" class="w-3.5 h-3.5"></i> Continue Learning</button>
         </div>
       </article>
 
       <!-- Neural Networks -->
       <article class="module-card glass p-0 rounded-2xl overflow-hidden animate-fade-up animate-fade-up-2">
         <div class="relative cursor-pointer group" style="aspect-ratio:16/9;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);overflow:hidden"
-             onclick="window.open('https://www.youtube.com/results?search_query=neural+networks+deep+learning+tutorial','_blank')">
+             onclick="openModuleLesson('neural-networks')">
           <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
             <div class="w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
                  style="background:rgba(255,0,0,0.9);box-shadow:0 0 24px rgba(255,0,0,0.5)">
@@ -521,14 +527,14 @@
             <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">ReLU</span>
             <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">CNN</span>
           </div>
-          <button onclick="switchMainTab('lesson')" class="btn-primary w-full text-sm py-2.5"><i data-lucide="play" class="w-3.5 h-3.5"></i> Continue Learning</button>
+          <button onclick="openModuleLesson('neural-networks')" class="btn-primary w-full text-sm py-2.5"><i data-lucide="play" class="w-3.5 h-3.5"></i> Continue Learning</button>
         </div>
       </article>
 
       <!-- Transformers -->
       <article class="module-card glass p-0 rounded-2xl overflow-hidden animate-fade-up animate-fade-up-3">
         <div class="relative cursor-pointer group" style="aspect-ratio:16/9;background:linear-gradient(135deg,#1a0533,#3d0c5e,#1a0533);overflow:hidden"
-             onclick="window.open('https://www.youtube.com/results?search_query=transformers+attention+mechanism+explained','_blank')">
+             onclick="openModuleLesson('transformers')">
           <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
             <div class="w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
                  style="background:rgba(255,0,0,0.9);box-shadow:0 0 24px rgba(255,0,0,0.5)">
@@ -554,7 +560,7 @@
             <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">BERT</span>
             <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">GPT</span>
           </div>
-          <button onclick="switchMainTab('lesson')" class="btn-primary w-full text-sm py-2.5" style="background:linear-gradient(135deg,#EF4444,#DC2626);box-shadow:0 4px 18px rgba(239,68,68,0.4)">
+          <button onclick="openModuleLesson('transformers')" class="btn-primary w-full text-sm py-2.5" style="background:linear-gradient(135deg,#EF4444,#DC2626);box-shadow:0 4px 18px rgba(239,68,68,0.4)">
             <i data-lucide="play" class="w-3.5 h-3.5"></i> Start Module
           </button>
         </div>
@@ -563,7 +569,7 @@
       <!-- Random Forests -->
       <article class="module-card glass p-0 rounded-2xl overflow-hidden animate-fade-up animate-fade-up-1">
         <div class="relative cursor-pointer group" style="aspect-ratio:16/9;background:linear-gradient(135deg,#0a2e0a,#1a4a1a);overflow:hidden"
-             onclick="window.open('https://www.youtube.com/results?search_query=random+forest+algorithm+explained','_blank')">
+             onclick="openModuleLesson('random-forests')">
           <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
             <div class="w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
                  style="background:rgba(255,0,0,0.9);box-shadow:0 0 24px rgba(255,0,0,0.5)">
@@ -581,14 +587,14 @@
             <div class="flex justify-between text-xs mb-1"><span style="color:var(--clr-muted)">Progress</span><span class="font-semibold" style="color:#34D399">0 / 8 lessons</span></div>
             <div class="progress-bar-track"><div class="progress-bar-fill" style="width:0%;background:linear-gradient(90deg,#34D399,#10B981)"></div></div>
           </div>
-          <button class="btn-glass w-full text-sm"><i data-lucide="lock" class="w-3.5 h-3.5"></i> Unlock Module</button>
+          <button onclick="openModuleLesson('random-forests')" class="btn-glass w-full text-sm"><i data-lucide="lock" class="w-3.5 h-3.5"></i> Unlock Module</button>
         </div>
       </article>
 
       <!-- Reinforcement Learning -->
       <article class="module-card glass p-0 rounded-2xl overflow-hidden animate-fade-up animate-fade-up-2">
         <div class="relative cursor-pointer group" style="aspect-ratio:16/9;background:linear-gradient(135deg,#1a0a2e,#2e1a4a);overflow:hidden"
-             onclick="window.open('https://www.youtube.com/results?search_query=reinforcement+learning+explained+q-learning','_blank')">
+             onclick="openModuleLesson('reinforcement-learning')">
           <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
             <div class="w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
                  style="background:rgba(255,0,0,0.9);box-shadow:0 0 24px rgba(255,0,0,0.5)">
@@ -606,14 +612,14 @@
             <div class="flex justify-between text-xs mb-1"><span style="color:var(--clr-muted)">Progress</span><span class="font-semibold" style="color:#FBBF24">0 / 12 lessons</span></div>
             <div class="progress-bar-track"><div class="progress-bar-fill" style="width:0%;background:linear-gradient(90deg,#FBBF24,#F59E0B)"></div></div>
           </div>
-          <button class="btn-glass w-full text-sm"><i data-lucide="lock" class="w-3.5 h-3.5"></i> Unlock Module</button>
+          <button onclick="openModuleLesson('reinforcement-learning')" class="btn-glass w-full text-sm"><i data-lucide="lock" class="w-3.5 h-3.5"></i> Unlock Module</button>
         </div>
       </article>
 
       <!-- GANs -->
       <article class="module-card glass p-0 rounded-2xl overflow-hidden animate-fade-up animate-fade-up-3">
         <div class="relative cursor-pointer group" style="aspect-ratio:16/9;background:linear-gradient(135deg,#2e0a0a,#4a1a1a);overflow:hidden"
-             onclick="window.open('https://www.youtube.com/results?search_query=generative+adversarial+networks+GAN+explained','_blank')">
+             onclick="openModuleLesson('gans')">
           <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
             <div class="w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
                  style="background:rgba(255,0,0,0.9);box-shadow:0 0 24px rgba(255,0,0,0.5)">
@@ -783,6 +789,9 @@
     window.location.replace('/');
   }
 </script>
+
+<!-- ═══════════════ FUNCTIONALITY SCRIPTS ═══════════════ -->
+<script src="dashboard-functions.js"></script>
 
 <!-- ═══════════════ QUIZ / GAME / CHARTS SCRIPT ═══════════════ -->
 <script src="quiz-logic.js"></script>

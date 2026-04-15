@@ -266,7 +266,7 @@ function getMockLesson(topic, level) {
 }
 
 /** POST /api/generate-lesson (protected) */
-app.post('/api/generate-lesson', authenticate, async (req, res) => {
+async function handleLessonGeneration(req, res) {
   try {
     const { topic, level } = req.body;
     if (!topic || !level) return res.status(400).json({ error: 'topic and level are required.' });
@@ -298,6 +298,41 @@ app.post('/api/generate-lesson', authenticate, async (req, res) => {
     console.error(err);
     res.status(500).json({ error: 'Lesson generation failed.' });
   }
+}
+
+app.post('/api/generate-lesson', authenticate, handleLessonGeneration);
+app.post('/api/lesson', authenticate, handleLessonGeneration);
+
+/** POST /api/quiz (protected) */
+app.post('/api/quiz', authenticate, async (req, res) => {
+  try {
+    const { moduleId, moduleName, score, total } = req.body;
+    if (!moduleId || !moduleName || typeof score !== 'number' || typeof total !== 'number') {
+      return res.status(400).json({ error: 'moduleId, moduleName, score and total are required.' });
+    }
+
+    const student = await Student.findById(req.user.id);
+    if (!student) return res.status(404).json({ error: 'Student not found.' });
+
+    const entry = student.progress.find(p => p.moduleId === moduleId);
+    const completed = Math.min(score, total);
+
+    if (entry) {
+      entry.completed = completed;
+      entry.total = total;
+      entry.lastStudied = new Date();
+    } else {
+      student.progress.push({ moduleId, moduleName, completed, total });
+    }
+
+    student.xp += score;
+    await student.save();
+
+    res.json({ xp: student.xp, progress: student.progress });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Quiz submission failed.' });
+  }
 });
 
 /** POST /api/complete-module (protected) */
@@ -319,15 +354,18 @@ app.post('/api/complete-module', authenticate, async (req, res) => {
   }
 });
 
-// ─── Fallback SPA routing ──────────────────────────────────────────────────────
+// ─── Page routing ───────────────────────────────────────────────────────────
 app.get('/', (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
+);
+app.get('/auth', (req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'auth.html'))
 );
 app.get('/dashboard', (req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'))
 );
 app.get('*', (req, res) =>
-  res.sendFile(path.join(__dirname, 'public', 'auth.html'))
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
 );
 
 // ─── Start ─────────────────────────────────────────────────────────────────────

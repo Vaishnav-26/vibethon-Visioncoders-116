@@ -66,7 +66,7 @@ async function generateLesson() {
     </div>`;
 
   try {
-    const res  = await fetch(`${_API()}/generate-lesson`, {
+    const res  = await fetch(`${_API()}/lesson`, {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+_tok() },
       body: JSON.stringify({ topic, level })
@@ -268,17 +268,18 @@ async function showQuizResults() {
 
   // Award XP on server
   try {
-    const topic = document.getElementById('lesson-topic').value;
-    const r = await fetch(`${_API()}/progress`, {
-      method:'PATCH',
+    const topic = document.getElementById('lesson-topic')?.value || 'AI Lesson';
+    const r = await fetch(`${_API()}/quiz`, {
+      method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+_tok()},
-      body:JSON.stringify({ moduleId:'quiz-'+Date.now(), moduleName:topic+' Quiz', completed:score, total })
+      body:JSON.stringify({ moduleId:'spam-game', moduleName:'Spam Classification Game', score, total })
     });
     if (r.ok) {
       const d   = await r.json();
       const stu = JSON.parse(localStorage.getItem('aile_student')||'{}');
       stu.xp = d.xp;
       localStorage.setItem('aile_student', JSON.stringify(stu));
+      localStorage.setItem('aile_learning_state', JSON.stringify({ xp:d.xp, streak:stu.streak || 0, lessonsCompleted:(stu.lessonsCompleted||0)+1 }));
       const xpEl = document.getElementById('xp-count');
       if (xpEl) xpEl.textContent = d.xp;
     }
