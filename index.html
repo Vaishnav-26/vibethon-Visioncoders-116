@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuralTask — Dashboard | AI/ML Learning Platform</title>
+  <meta name="description" content="Your personalized AI/ML learning dashboard with tasks, progress tracking and AI-powered suggestions.">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+</head>
+<body>
+<canvas id="particles-canvas"></canvas>
+
+<!-- ═══ SIDEBAR ═══ -->
+<div class="app-layout">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🧠</div>
+      <div>
+        <div class="sidebar-logo-text">NeuralTask</div>
+        <div class="sidebar-logo-sub">AI-Powered Learning</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section-title">Main Menu</div>
+    <a class="nav-item active" data-page="dashboard" onclick="navigate('dashboard',this)">
+      <span class="nav-icon">📊</span> Dashboard
+    </a>
+    <a class="nav-item" data-page="courses" onclick="navigate('courses',this)">
+      <span class="nav-icon">📚</span> Courses
+    </a>
+    <a class="nav-item" data-page="games" onclick="navigate('games',this)">
+      <span class="nav-icon">🎮</span> AI/ML Games <span class="nav-badge">4</span>
+    </a>
+    <a class="nav-item" data-page="videos" onclick="navigate('videos',this)">
+      <span class="nav-icon">🎬</span> Video Topics
+    </a>
+    <a class="nav-item" data-page="progress" onclick="navigate('progress',this)">
+      <span class="nav-icon">📈</span> Progress
+    </a>
+    <a class="nav-item" data-page="leaderboard" onclick="navigate('leaderboard',this)">
+      <span class="nav-icon">🏆</span> Leaderboard
+    </a>
+
+    <div class="sidebar-section-title" style="margin-top:16px;">More</div>
+    <a class="nav-item" data-page="resources" onclick="navigate('resources',this)">
+      <span class="nav-icon">📎</span> Resources
+    </a>
+    <a class="nav-item" data-page="profile" onclick="navigate('profile',this)">
+      <span class="nav-icon">👤</span> Profile
+    </a>
+
+    <div class="sidebar-bottom">
+      <div class="user-card" onclick="navigate('profile', document.querySelector('[data-page=profile]'))">
+        <div class="user-avatar" id="sidebar-avatar">A</div>
+        <div>
+          <div class="user-name" id="sidebar-name">Loading...</div>
+          <div class="user-role" id="sidebar-email">user@neuraltask.ai</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══ MAIN ═══ -->
+  <main class="main-content">
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-search">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Search courses, topics..." id="global-search" oninput="handleSearch(this.value)">
+      </div>
+      <div class="topbar-actions">
+        <div class="topbar-btn" onclick="showNotifications()" title="Notifications">
+          🔔 <span class="notif-dot"></span>
+        </div>
+        <div class="topbar-btn" onclick="navigate('profile', document.querySelector('[data-page=profile]'))" title="Profile">
+          <span id="topbar-avatar-text">👤</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ════════════════════════════════
+         DASHBOARD PAGE
+    ════════════════════════════════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-content">
+        <!-- Welcome Banner -->
+        <div style="background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(6,182,212,0.08));border:1px solid rgba(99,102,241,0.2);border-radius:20px;padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;color:var(--cyan);font-weight:600;margin-bottom:4px;">✨ AI-Powered Learning Platform</div>
+            <h1 style="font-size:26px;font-weight:800;margin-bottom:6px;">Good day, <span id="welcome-name">Learner</span>! 👋</h1>
+            <p style="color:var(--text-secondary);font-size:14px;">Continue your AI/ML journey. You're making great progress!</p>
+          </div>
+          <div class="animate-float" style="font-size:64px;opacity:0.8;">🧠</div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-card c1">
+            <div class="stat-icon green">✅</div>
+            <div class="stat-value" id="stat-completed">0/6</div>
+            <div class="stat-label">Tasks Completed</div>
+            <div class="stat-progress"><div class="stat-progress-fill" id="stat-completed-bar" style="width:0%;background:var(--grad-green)"></div></div>
+          </div>
+          <div class="stat-card c2">
+            <div class="stat-icon purple">🎯</div>
+            <div class="stat-value" id="stat-rate">0%</div>
+            <div class="stat-label">Completion Rate</div>
+            <div class="stat-progress"><div class="stat-progress-fill" id="stat-rate-bar" style="width:0%"></div></div>
+          </div>
+          <div class="stat-card c3">
+            <div class="stat-icon blue">⏱️</div>
+            <div class="stat-value" id="stat-hours">0h</div>
+            <div class="stat-label">Learning Hours</div>
+            <div class="stat-progress"><div class="stat-progress-fill" id="stat-hours-bar" style="width:0%;background:linear-gradient(135deg,#06b6d4,#3b82f6)"></div></div>
+          </div>
+          <div class="stat-card c4">
+            <div class="stat-icon orange">🔥</div>
+            <div class="stat-value" id="stat-streak">0</div>
+            <div class="stat-label">Day Streak</div>
+            <div class="stat-progress"><div class="stat-progress-fill" id="stat-streak-bar" style="width:0%;background:var(--grad-orange)"></div></div>
+          </div>
+        </div>
+
+        <!-- Tasks + Sidebar -->
+        <div class="two-col">
+          <!-- Tasks Column -->
+          <div>
+            <div class="section-header">
+              <div class="section-title">Learning Tasks</div>
+              <button class="btn btn-primary btn-sm" onclick="openAddTask()">+ Add Task</button>
+            </div>
+
+            <div class="filter-tabs">
+              <div class="filter-tab active" onclick="filterTasks('all',this)">All</div>
+              <div class="filter-tab" onclick="filterTasks('active',this)">Active</div>
+              <div class="filter-tab" onclick="filterTasks('completed',this)">Completed</div>
+            </div>
+
+            <div id="tasks-container"></div>
+          </div>
+
+          <!-- Right Sidebar -->
+          <div>
+            <!-- Progress by Category -->
+            <div class="card" style="margin-bottom:16px;">
+              <div class="card-header">
+                <div class="card-title">📈 Progress by Category</div>
+              </div>
+              <div id="category-progress"></div>
+            </div>
+
+            <!-- AI Suggestions -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">🤖 AI Suggestions</div>
+                <button onclick="refreshSuggestions()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;" title="Refresh">🔄</button>
+              </div>
+              <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Personalized for you</p>
+              <div id="ai-suggestions"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         COURSES PAGE
+    ════════════════════════════════ -->
+    <div class="page" id="page-courses">
+      <div class="page-content">
+        <h1 class="section-title" style="margin-bottom:20px;font-size:22px;">📚 All Courses</h1>
+        <div class="search-bar">
+          <span style="color:var(--text-muted)">🔍</span>
+          <input type="text" placeholder="Search courses..." id="course-search" oninput="filterCourses()">
+        </div>
+        <div class="category-filters" id="course-cat-filters">
+          <div class="cat-filter active" data-cat="all" onclick="setCourseFilter('all',this)">All Courses</div>
+          <div class="cat-filter" data-cat="ML Basics" onclick="setCourseFilter('ML Basics',this)">ML Basics</div>
+          <div class="cat-filter" data-cat="Deep Learning" onclick="setCourseFilter('Deep Learning',this)">Deep Learning</div>
+          <div class="cat-filter" data-cat="NLP" onclick="setCourseFilter('NLP',this)">NLP</div>
+          <div class="cat-filter" data-cat="Computer Vision" onclick="setCourseFilter('Computer Vision',this)">Computer Vision</div>
+          <div class="cat-filter" data-cat="Practice" onclick="setCourseFilter('Practice',this)">Practice</div>
+          <div class="cat-filter" data-cat="Reinforcement" onclick="setCourseFilter('Reinforcement',this)">Reinforcement Learning</div>
+        </div>
+        <div class="courses-grid" id="courses-grid"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         GAMES PAGE
+    ════════════════════════════════ -->
+    <div class="page" id="page-games">
+      <div class="page-content">
+        <h1 class="section-title" style="margin-bottom:8px;font-size:22px;">🎮 AI/ML Games</h1>
+        <p style="color:var(--text-secondary);margin-bottom:24px;font-size:14px;">Learn AI & ML concepts through interactive games!</p>
+        <div class="games-grid" id="games-grid"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         VIDEOS PAGE
+    ════════════════════════════════ -->
+    <div class="page" id="page-videos">
+      <div class="page-content">
+        <h1 class="section-title" style="margin-bottom:8px;font-size:22px;">🎬 Visual Topic Explanations</h1>
+        <p style="color:var(--text-secondary);margin-bottom:20px;font-size:14px;">Learn AI/ML topics through curated video explanations</p>
+        <div class="category-filters" id="video-cat-filters">
+          <div class="cat-filter active" data-cat="all" onclick="setVideoFilter('all',this)">All Topics</div>
+          <div class="cat-filter" data-cat="Fundamentals" onclick="setVideoFilter('Fundamentals',this)">Fundamentals</div>
+          <div class="cat-filter" data-cat="Deep Learning" onclick="setVideoFilter('Deep Learning',this)">Deep Learning</div>
+          <div class="cat-filter" data-cat="NLP" onclick="setVideoFilter('NLP',this)">NLP</div>
+          <div class="cat-filter" data-cat="Computer Vision" onclick="setVideoFilter('Computer Vision',this)">Computer Vision</div>
+          <div class="cat-filter" data-cat="Math" onclick="setVideoFilter('Math',this)">Math for ML</div>
+        </div>
+        <div class="videos-grid" id="videos-grid"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         PROGRESS PAGE
+    ════════════════════════════════ -->
+    <div class="page" id="page-progress">
+      <div class="page-content">
+        <h1 class="section-title" style="margin-bottom:24px;font-size:22px;">📈 Your Progress</h1>
+        <div class="progress-overview">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px;">Overall Completion</div>
+            <div class="chart-container"><canvas id="completion-chart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px;">Category Breakdown</div>
+            <div class="chart-container"><canvas id="category-chart"></canvas></div>
+          </div>
+        </div>
+        <!-- Learning Heatmap -->
+        <div class="card" style="margin-bottom:24px;">
+          <div class="card-title" style="margin-bottom:4px;">Learning Activity (Past Year)</div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Daily learning sessions tracked</p>
+          <div class="heatmap-grid" id="heatmap"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--text-muted);">
+            Less <div style="width:12px;height:12px;background:rgba(255,255,255,0.05);border-radius:2px;"></div>
+            <div style="width:12px;height:12px;background:rgba(99,102,241,0.2);border-radius:2px;"></div>
+            <div style="width:12px;height:12px;background:rgba(99,102,241,0.4);border-radius:2px;"></div>
+            <div style="width:12px;height:12px;background:var(--indigo);border-radius:2px;"></div> More
+          </div>
+        </div>
+        <!-- Achievements -->
+        <div class="section-header"><div class="section-title">🏅 Achievements</div></div>
+        <div class="achievements-grid" id="achievements-grid"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         LEADERBOARD PAGE
+    ════════════════════════════════ -->
+    <div class="page" id="page-leaderboard">
+      <div class="page-content">
+        <h1 class="section-title" style="margin-bottom:8px;font-size:22px;">🏆 Global Leaderboard</h1>
+        <p style="color:var(--text-secondary);margin-bottom:20px;font-size:14px;">Compete with learners worldwide!</p>
+        <div class="filter-tabs" style="max-width:340px;margin-bottom:24px;">
+          <div class="filter-tab active" onclick="setLBFilter('weekly',this)">Weekly</div>
+          <div class="filter-tab" onclick="setLBFilter('monthly',this)">Monthly</div>
+          <div class="filter-tab" onclick="setLBFilter('alltime',this)">All Time</div>
+        </div>
+        <div class="lb-podium" id="lb-podium"></div>
+        <div class="card">
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Learner</th>
+                <th>XP Points</th>
+                <th>Streak</th>
+                <th>Badges</th>
+                <th>Change</th>
+              </tr>
+            </thead>
+            <tbody id="lb-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         RESOURCES PAGE
+    ════════════════════════════════ -->
+    <div class="page" id="page-resources">
+      <div class="page-content">
+        <h1 class="section-title" style="margin-bottom:24px;font-size:22px;">📎 AI/ML Resources</h1>
+        <div class="resources-grid" id="resources-grid"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         PROFILE PAGE
+    ════════════════════════════════ -->
+    <div class="page" id="page-profile">
+      <div class="page-content">
+        <div class="profile-header">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar" id="profile-avatar-display">A</div>
+          </div>
+          <div class="profile-info">
+            <div class="profile-name" id="profile-name-display">Learner</div>
+            <div class="profile-email" id="profile-email-display">user@neuraltask.ai</div>
+            <div class="profile-badges">
+              <span class="tag tag-cyan">🧠 ML Enthusiast</span>
+              <span class="tag tag-purple">⚡ Fast Learner</span>
+              <span class="tag tag-green">🔥 Streak Master</span>
+            </div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:10px;align-items:flex-start;padding-top:48px;">
+            <button class="btn btn-outline btn-sm" onclick="showEditProfile()">✏️ Edit Profile</button>
+            <button class="btn btn-sm" style="background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3);" onclick="handleLogout()">🚪 Logout</button>
+          </div>
+        </div>
+
+        <div class="profile-stats" style="margin-bottom:24px;">
+          <div class="profile-stat"><div class="profile-stat-value" id="p-completed">0</div><div class="profile-stat-label">Tasks Done</div></div>
+          <div class="profile-stat"><div class="profile-stat-value" id="p-hours">0h</div><div class="profile-stat-label">Learning Hours</div></div>
+          <div class="profile-stat"><div class="profile-stat-value" id="p-streak">0</div><div class="profile-stat-label">Day Streak</div></div>
+          <div class="profile-stat"><div class="profile-stat-value" id="p-xp">0</div><div class="profile-stat-label">XP Points</div></div>
+        </div>
+
+        <!-- Settings Card -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:20px;">⚙️ Settings</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div>
+              <div class="form-label">Display Name</div>
+              <input type="text" class="form-input" id="settings-name" placeholder="Your name">
+            </div>
+            <div>
+              <div class="form-label">Learning Goal</div>
+              <select class="form-input" id="settings-goal" style="cursor:pointer;">
+                <option value="30">30 min/day</option>
+                <option value="60">1 hour/day</option>
+                <option value="120" selected>2 hours/day</option>
+                <option value="180">3 hours/day</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:20px;">
+            <div class="form-label" style="margin-bottom:12px;">Notification Preferences</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="notif-tasks" checked> Task reminders
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="notif-streak" checked> Streak alerts
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="notif-lb"> Leaderboard updates
+              </label>
+            </div>
+          </div>
+          <div style="margin-top:20px;">
+            <button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 Save Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ════════════ MODALS ════════════ -->
+
+<!-- Add Task Modal -->
+<div class="modal-backdrop" id="backdrop" onclick="closeAllModals()"></div>
+
+<div class="add-task-modal" id="add-task-modal">
+  <div class="add-task-inner">
+    <div class="game-modal-header" style="padding:0 0 16px 0;border:none;">
+      <div class="game-modal-title">➕ Add New Task</div>
+      <div class="close-btn" onclick="closeAllModals()">✕</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Task Title *</label>
+      <input type="text" class="form-input" id="new-task-title" placeholder="e.g., Learn Gradient Descent">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-input" id="new-task-desc" placeholder="What will you learn?" rows="3" style="resize:vertical;"></textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-input" id="new-task-cat" style="cursor:pointer;">
+          <option>ML Basics</option><option>Deep Learning</option>
+          <option>NLP</option><option>Computer Vision</option><option>Practice</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Difficulty</label>
+        <select class="form-input" id="new-task-diff" style="cursor:pointer;">
+          <option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Estimated Time (hours)</label>
+      <input type="number" class="form-input" id="new-task-time" value="2" min="0.5" max="20" step="0.5">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button class="btn btn-primary btn-full" onclick="addTask()">Add Task ✨</button>
+      <button class="btn btn-outline" onclick="closeAllModals()" style="min-width:80px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Game Modals -->
+<div class="game-modal" id="quiz-modal">
+  <div class="game-modal-inner">
+    <div class="game-modal-header">
+      <div class="game-modal-title">🧠 ML Quiz Arena</div>
+      <div class="close-btn" onclick="closeGame()">✕</div>
+    </div>
+    <div class="game-modal-body" id="quiz-body"></div>
+  </div>
+</div>
+
+<div class="game-modal" id="nn-modal">
+  <div class="game-modal-inner">
+    <div class="game-modal-header">
+      <div class="game-modal-title">🔬 Neural Network Builder</div>
+      <div class="close-btn" onclick="closeGame()">✕</div>
+    </div>
+    <div class="game-modal-body" id="nn-body"></div>
+  </div>
+</div>
+
+<div class="game-modal" id="pattern-modal">
+  <div class="game-modal-inner">
+    <div class="game-modal-header">
+      <div class="game-modal-title">🔡 Pattern Recognition</div>
+      <div class="close-btn" onclick="closeGame()">✕</div>
+    </div>
+    <div class="game-modal-body" id="pattern-body"></div>
+  </div>
+</div>
+
+<div class="game-modal" id="detective-modal">
+  <div class="game-modal-inner" style="max-width:800px;">
+    <div class="game-modal-header">
+      <div class="game-modal-title">🕵️ Data Detective</div>
+      <div class="close-btn" onclick="closeGame()">✕</div>
+    </div>
+    <div class="game-modal-body" id="detective-body"></div>
+  </div>
+</div>
+
+<!-- Video Modal -->
+<div class="video-modal" id="video-modal">
+  <div class="video-modal-inner">
+    <div class="game-modal-header" style="padding:16px 20px;">
+      <div class="game-modal-title" id="video-modal-title">Video</div>
+      <div class="close-btn" onclick="closeVideoModal()">✕</div>
+    </div>
+    <div class="video-modal-embed">
+      <iframe id="video-modal-iframe" src="" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+    </div>
+    <div class="video-modal-info">
+      <div class="video-modal-title" id="video-modal-title2"></div>
+      <div class="video-modal-desc" id="video-modal-desc"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="toast-icon">✅</div>
+  <div>
+    <div class="toast-title" id="toast-title">Success!</div>
+    <div class="toast-msg" id="toast-msg">Action completed.</div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="games.js"></script>
+</body>
+</html>

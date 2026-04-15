@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "NeuralTask App",
+      "type": "chrome",
+      "request": "launch",
+      "file": "${workspaceFolder}/login.html",
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}
