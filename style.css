@@ -1,0 +1,466 @@
+/* ═══════════════════════════════════════════════════════════════
+   AI-Learn Explorer – Global Styles
+   Supplements Tailwind CSS with custom glass/animation tokens
+═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+/* ── Design Tokens ─────────────────────────────────────────── */
+:root {
+  --clr-bg: #050810;
+  --clr-surface: rgba(255, 255, 255, 0.04);
+  --clr-border: rgba(255, 255, 255, 0.10);
+  --clr-accent1: #6C63FF;
+  /* violet */
+  --clr-accent2: #00D4FF;
+  /* cyan   */
+  --clr-accent3: #FF6584;
+  /* pink   */
+  --clr-gold: #FFD700;
+  --clr-text: #E2E8F0;
+  --clr-muted: #64748B;
+  --blur-sm: blur(8px);
+  --blur-md: blur(16px);
+  --blur-lg: blur(32px);
+  --radius-card: 1.25rem;
+  --radius-pill: 9999px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Base ──────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--clr-bg);
+  color: var(--clr-text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Animated Gradient Background ─────────────────────────── */
+.bg-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--clr-bg);
+  overflow: hidden;
+}
+
+.bg-mesh::before,
+.bg-mesh::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  animation: drift 18s ease-in-out infinite alternate;
+}
+
+.bg-mesh::before {
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, var(--clr-accent1) 0%, transparent 70%);
+  top: -200px;
+  left: -200px;
+}
+
+.bg-mesh::after {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--clr-accent2) 0%, transparent 70%);
+  bottom: -150px;
+  right: -150px;
+  animation-delay: -9s;
+}
+
+@keyframes drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(60px, 40px) scale(1.1);
+  }
+
+  100% {
+    transform: translate(-30px, 60px) scale(0.95);
+  }
+}
+
+/* ── Glass Card ────────────────────────────────────────────── */
+.glass {
+  background: var(--clr-surface);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-card);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: var(--blur-lg);
+  -webkit-backdrop-filter: var(--blur-lg);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-card);
+}
+
+/* ── Gradient Text ─────────────────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(135deg, var(--clr-accent1), var(--clr-accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-warm {
+  background: linear-gradient(135deg, var(--clr-accent3), var(--clr-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  background: linear-gradient(135deg, var(--clr-accent1), var(--clr-accent2));
+  color: #fff;
+  box-shadow: 0 4px 24px rgba(108, 99, 255, 0.4);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(108, 99, 255, 0.55);
+}
+
+.btn-primary:hover::after {
+  opacity: 1;
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-glass {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.5rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--clr-border);
+  background: var(--clr-surface);
+  backdrop-filter: var(--blur-sm);
+  color: var(--clr-text);
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-glass:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(108, 99, 255, 0.5);
+  color: #fff;
+}
+
+/* ── Input Fields ───────────────────────────────────────────── */
+.input-glass {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--clr-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--clr-text);
+  font-size: 0.9rem;
+  outline: none;
+  transition: var(--transition);
+  font-family: inherit;
+}
+
+.input-glass::placeholder {
+  color: var(--clr-muted);
+}
+
+.input-glass:focus {
+  border-color: var(--clr-accent1);
+  background: rgba(108, 99, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.18);
+}
+
+/* ── Progress Bar ────────────────────────────────────────────── */
+.progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--clr-accent1), var(--clr-accent2));
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.5);
+}
+
+/* ── XP Badge ───────────────────────────────────────────────── */
+.xp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* ── Module Card hover lift ─────────────────────────────────── */
+.module-card {
+  transition: transform var(--transition), box-shadow var(--transition);
+  cursor: pointer;
+}
+
+.module-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(108, 99, 255, 0.35);
+}
+
+/* ── Sidebar Nav Item ────────────────────────────────────────── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-radius: 0.75rem;
+  color: var(--clr-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  background: rgba(108, 99, 255, 0.15);
+  color: #fff;
+}
+
+.nav-item.active {
+  border-left: 3px solid var(--clr-accent1);
+}
+
+/* ── Streak flame animation ──────────────────────────────────── */
+.flame {
+  display: inline-block;
+  animation: flicker 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes flicker {
+  0% {
+    transform: scaleY(1) rotate(-3deg);
+    filter: brightness(1);
+  }
+
+  100% {
+    transform: scaleY(1.12) rotate(3deg);
+    filter: brightness(1.3);
+  }
+}
+
+/* ── Skill Radar glow ────────────────────────────────────────── */
+.radar-glow {
+  filter: drop-shadow(0 0 12px rgba(108, 99, 255, 0.5));
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(108, 99, 255, 0.4);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--clr-accent1);
+}
+
+/* ── Fade-in animation ───────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeSlideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-fade-up-1 {
+  animation-delay: 0.1s;
+  opacity: 0;
+}
+
+.animate-fade-up-2 {
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.animate-fade-up-3 {
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+.animate-fade-up-4 {
+  animation-delay: 0.4s;
+  opacity: 0;
+}
+
+/* ── Pulse glow ──────────────────────────────────────────────── */
+@keyframes pulseGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(108, 99, 255, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 28px rgba(108, 99, 255, 0.7);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+/* ── Tab active indicator ────────────────────────────────────── */
+.tab-active {
+  background: linear-gradient(135deg, var(--clr-accent1), var(--clr-accent2));
+  color: #fff !important;
+  box-shadow: 0 4px 16px rgba(108, 99, 255, 0.4);
+}
+
+/* ── Level Badge ─────────────────────────────────────────────── */
+.level-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+}
+
+.level-beginner {
+  background: rgba(52, 211, 153, 0.18);
+  color: #34D399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.level-intermediate {
+  background: rgba(251, 191, 36, 0.18);
+  color: #FBBF24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.level-advanced {
+  background: rgba(239, 68, 68, 0.18);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ── Toast Notification ──────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  padding: 0.85rem 1.5rem;
+  border-radius: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--clr-border);
+  background: rgba(30, 30, 50, 0.85);
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+#toast.success {
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+#toast.error {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* ── Responsive helpers ──────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform var(--transition);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+}

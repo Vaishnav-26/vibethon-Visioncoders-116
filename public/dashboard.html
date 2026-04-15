@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Learn Explorer – Dashboard</title>
+  <meta name="description" content="Track your AI/ML learning progress, generate AI lessons, play mini-games, earn XP and maintain your streak." />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode:'class',
+      theme:{ extend:{
+        colors:{ accent:'#6C63FF', accent2:'#00D4FF', accent3:'#FF6584' },
+        fontFamily:{ sans:['Inter','sans-serif'], display:['Space Grotesk','sans-serif'] }
+      }}
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    @keyframes spin { to { transform:rotate(360deg); } }
+    body { display:flex; min-height:100vh; overflow-x:hidden; }
+    :root { --sidebar-w:260px; }
+    #sidebar { width:var(--sidebar-w); flex-shrink:0; position:sticky; top:0; height:100vh; overflow-y:auto; }
+    #main    { flex:1; min-width:0; display:flex; flex-direction:column; }
+    .main-tab-btn {
+      padding:.45rem 1rem; border-radius:9999px; font-size:.82rem; font-weight:600;
+      white-space:nowrap; cursor:pointer; transition:all .25s;
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+      color:rgba(226,232,240,0.55);
+    }
+    .main-tab-btn:hover { color:#fff; background:rgba(255,255,255,0.08); }
+    .main-tab-btn.tab-active {
+      background:linear-gradient(135deg,#6C63FF,#00D4FF);
+      color:#fff; border-color:transparent;
+      box-shadow:0 4px 14px rgba(108,99,255,0.45);
+    }
+    @media(max-width:768px){
+      #sidebar { position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .3s ease;z-index:50; }
+      #sidebar.open { transform:translateX(0); }
+    }
+  </style>
+</head>
+<body class="dark">
+
+<!-- Background -->
+<div class="bg-mesh"></div>
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+  <div class="absolute w-80 h-80 rounded-full opacity-20" style="background:radial-gradient(circle,#FF6584,transparent 70%);bottom:8%;right:5%;filter:blur(60px)"></div>
+  <div class="absolute w-72 h-72 rounded-full opacity-15" style="background:radial-gradient(circle,#FFD700,transparent 70%);top:5%;left:50%;filter:blur(50px)"></div>
+</div>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside id="sidebar" class="glass-strong flex flex-col py-6 px-4 gap-1" style="border-right:1px solid var(--clr-border)">
+  <div class="flex items-center gap-3 px-2 mb-6">
+    <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 pulse-glow"
+         style="background:linear-gradient(135deg,#6C63FF,#00D4FF)">
+      <i data-lucide="brain-circuit" class="w-5 h-5 text-white"></i>
+    </div>
+    <div>
+      <p class="font-bold font-display text-sm text-gradient leading-tight">AI-Learn</p>
+      <p class="text-xs" style="color:var(--clr-muted)">Explorer</p>
+    </div>
+  </div>
+
+  <nav class="flex flex-col gap-1 flex-1">
+    <button onclick="switchMainTab('overview')"   class="nav-item active text-left" id="snav-overview"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Overview</button>
+    <button onclick="switchMainTab('lesson')"     class="nav-item text-left" id="snav-lesson"><i data-lucide="sparkles" class="w-4 h-4"></i> AI Lesson</button>
+    <button onclick="switchMainTab('game')"       class="nav-item text-left" id="snav-game"><i data-lucide="gamepad-2" class="w-4 h-4"></i> Mini-Game</button>
+    <button onclick="switchMainTab('progress')"   class="nav-item text-left" id="snav-progress"><i data-lucide="trending-up" class="w-4 h-4"></i> Progress</button>
+    <button onclick="switchMainTab('modules')"    class="nav-item text-left" id="snav-modules"><i data-lucide="book-open" class="w-4 h-4"></i> Modules</button>
+
+    <div class="mt-4 pt-4" style="border-top:1px solid var(--clr-border)">
+      <p class="px-2 text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--clr-muted)">Resources</p>
+      <a href="#" class="nav-item"><i data-lucide="file-text" class="w-4 h-4"></i> Documentation</a>
+      <a href="#" class="nav-item"><i data-lucide="flask-conical" class="w-4 h-4"></i> Playground</a>
+      <a href="#" class="nav-item"><i data-lucide="users" class="w-4 h-4"></i> Community</a>
+    </div>
+  </nav>
+
+  <div class="glass p-3 rounded-xl flex items-center gap-3">
+    <div id="avatar" class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+         style="background:linear-gradient(135deg,#6C63FF,#FF6584)">A</div>
+    <div class="overflow-hidden">
+      <p id="sidebar-name" class="text-sm font-semibold truncate">Student</p>
+      <p id="sidebar-level" class="level-badge level-beginner">Beginner</p>
+    </div>
+    <button onclick="logout()" class="ml-auto opacity-50 hover:opacity-100 transition-opacity flex-shrink-0" title="Logout">
+      <i data-lucide="log-out" class="w-4 h-4"></i>
+    </button>
+  </div>
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<div id="main" class="relative z-10">
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-30 glass-strong px-4 sm:px-6 py-3" style="border-bottom:1px solid var(--clr-border)">
+    <div class="flex items-center justify-between gap-3">
+      <button class="md:hidden p-2 rounded-lg btn-glass" onclick="document.getElementById('sidebar').classList.toggle('open')">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+      <div class="hidden md:block">
+        <h2 class="text-base font-bold font-display">Good <span id="time-greeting">morning</span>, <span id="header-name" class="text-gradient">Explorer</span> 👋</h2>
+        <p class="text-xs" style="color:var(--clr-muted)"><span id="header-date"></span></p>
+      </div>
+      <div class="flex items-center gap-2 ml-auto">
+        <div class="xp-badge glass" style="border:1px solid rgba(255,107,107,0.3)">
+          <span class="flame">🔥</span>
+          <span id="streak-count" class="font-bold text-sm" style="color:#FF6B6B">0</span>
+          <span class="text-xs hidden sm:inline" style="color:var(--clr-muted)">streak</span>
+        </div>
+        <div class="xp-badge glass" style="border:1px solid rgba(255,215,0,0.3)">
+          <span>⚡</span>
+          <span id="xp-count" class="font-bold text-sm" style="color:#FFD700">0</span>
+          <span class="text-xs hidden sm:inline" style="color:var(--clr-muted)">XP</span>
+        </div>
+        <button class="btn-glass w-8 h-8 !p-0 relative hidden sm:flex">
+          <i data-lucide="bell" class="w-4 h-4"></i>
+          <span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full" style="background:#FF6584"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- TAB BAR -->
+  <div class="px-4 sm:px-6 py-3 flex gap-2 overflow-x-auto" style="border-bottom:1px solid var(--clr-border);scrollbar-width:none">
+    <button id="mtb-overview" class="main-tab-btn tab-active" onclick="switchMainTab('overview')">📊 Overview</button>
+    <button id="mtb-lesson"   class="main-tab-btn" onclick="switchMainTab('lesson')">🤖 AI Lesson</button>
+    <button id="mtb-game"     class="main-tab-btn" onclick="switchMainTab('game')">🎮 Mini-Game</button>
+    <button id="mtb-progress" class="main-tab-btn" onclick="switchMainTab('progress')">📈 Progress</button>
+    <button id="mtb-modules"  class="main-tab-btn" onclick="switchMainTab('modules')">📚 Modules</button>
+  </div>
+
+  <!-- PANELS CONTAINER -->
+  <div class="flex-1 overflow-y-auto">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-0">
+
+  <!-- ═══════════════════════════════════════════
+       PANEL 1 — OVERVIEW
+  ═══════════════════════════════════════════ -->
+  <div id="panel-overview" class="main-tab-panel space-y-6">
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="glass p-5 rounded-2xl animate-fade-up animate-fade-up-1">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--clr-muted)">Total XP</span>
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(108,99,255,0.2)">⚡</div>
+        </div>
+        <p id="stat-xp" class="text-3xl font-bold font-display text-gradient">0</p>
+        <p class="text-xs mt-1" style="color:var(--clr-muted)">+120 this week</p>
+      </div>
+      <div class="glass p-5 rounded-2xl animate-fade-up animate-fade-up-2">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--clr-muted)">Streak</span>
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,107,107,0.2)">🔥</div>
+        </div>
+        <p id="stat-streak" class="text-3xl font-bold font-display" style="color:#FF6B6B">0</p>
+        <p class="text-xs mt-1" style="color:var(--clr-muted)">Days in a row</p>
+      </div>
+      <div class="glass p-5 rounded-2xl animate-fade-up animate-fade-up-3">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--clr-muted)">Lessons Done</span>
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(0,212,255,0.2)">📚</div>
+        </div>
+        <p id="stat-lessons" class="text-3xl font-bold font-display text-gradient-warm">0</p>
+        <p class="text-xs mt-1" style="color:var(--clr-muted)">AI-generated lessons</p>
+      </div>
+      <div class="glass p-5 rounded-2xl animate-fade-up animate-fade-up-4">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold uppercase tracking-wider" style="color:var(--clr-muted)">Rank</span>
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,215,0,0.15)">🏆</div>
+        </div>
+        <p class="text-3xl font-bold font-display" style="color:#FFD700">#12</p>
+        <p class="text-xs mt-1" style="color:var(--clr-muted)">Global leaderboard</p>
+      </div>
+    </div>
+
+    <!-- Radar + Progress side-by-side -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+      <div class="glass p-5 rounded-2xl lg:col-span-3">
+        <div class="flex items-center justify-between mb-4">
+          <div><h3 class="text-base font-bold font-display">Skill Radar</h3><p class="text-xs" style="color:var(--clr-muted)">Your AI/ML competency profile</p></div>
+          <button class="btn-glass text-xs px-3 py-1.5"><i data-lucide="refresh-cw" class="w-3 h-3"></i> Update</button>
+        </div>
+        <div style="height:260px;position:relative"><canvas id="radarChart" class="radar-glow"></canvas></div>
+      </div>
+      <div class="glass p-5 rounded-2xl lg:col-span-2 flex flex-col">
+        <h3 class="text-base font-bold font-display mb-4">Module Progress</h3>
+        <div class="flex flex-col gap-4 flex-1">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <div class="flex items-center gap-2"><span class="level-badge level-beginner">Beginner</span><span class="text-xs font-semibold">Foundation Track</span></div>
+              <span id="prog-beginner-pct" class="text-xs font-bold" style="color:#34D399">0%</span>
+            </div>
+            <div class="progress-bar-track"><div id="prog-beginner-bar" class="progress-bar-fill" style="width:0%;background:linear-gradient(90deg,#34D399,#10B981)"></div></div>
+            <p class="text-xs mt-1" style="color:var(--clr-muted)"><span id="prog-beginner-txt">0 / 0 lessons</span></p>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <div class="flex items-center gap-2"><span class="level-badge level-intermediate">Intermediate</span><span class="text-xs font-semibold">Deep Dive</span></div>
+              <span id="prog-inter-pct" class="text-xs font-bold" style="color:#FBBF24">0%</span>
+            </div>
+            <div class="progress-bar-track"><div id="prog-inter-bar" class="progress-bar-fill" style="width:0%;background:linear-gradient(90deg,#FBBF24,#F59E0B)"></div></div>
+            <p class="text-xs mt-1" style="color:var(--clr-muted)"><span id="prog-inter-txt">0 / 0 lessons</span></p>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <div class="flex items-center gap-2"><span class="level-badge level-advanced">Advanced</span><span class="text-xs font-semibold">Expert Track</span></div>
+              <span id="prog-adv-pct" class="text-xs font-bold" style="color:#EF4444">0%</span>
+            </div>
+            <div class="progress-bar-track"><div id="prog-adv-bar" class="progress-bar-fill" style="width:0%;background:linear-gradient(90deg,#EF4444,#DC2626)"></div></div>
+            <p class="text-xs mt-1" style="color:var(--clr-muted)"><span id="prog-adv-txt">0 / 0 lessons</span></p>
+          </div>
+        </div>
+        <div class="mt-5 pt-4" style="border-top:1px solid var(--clr-border)">
+          <div class="flex justify-between text-xs mb-1.5">
+            <span style="color:var(--clr-muted)">Overall Mastery</span>
+            <span id="overall-pct" class="font-bold text-gradient">0%</span>
+          </div>
+          <div class="progress-bar-track h-2.5"><div id="overall-bar" class="progress-bar-fill h-2.5" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="glass rounded-2xl overflow-hidden">
+      <div class="p-5 border-b" style="border-color:var(--clr-border)">
+        <h3 class="font-bold font-display">Leaderboard</h3>
+        <p class="text-xs mt-0.5" style="color:var(--clr-muted)">Top explorers this week</p>
+      </div>
+      <table class="w-full text-sm">
+        <thead><tr style="border-bottom:1px solid var(--clr-border)">
+          <th class="p-4 text-left text-xs uppercase tracking-wider" style="color:var(--clr-muted)">Rank</th>
+          <th class="p-4 text-left text-xs uppercase tracking-wider" style="color:var(--clr-muted)">Student</th>
+          <th class="p-4 text-left text-xs uppercase tracking-wider hidden sm:table-cell" style="color:var(--clr-muted)">Level</th>
+          <th class="p-4 text-right text-xs uppercase tracking-wider" style="color:var(--clr-muted)">XP</th>
+          <th class="p-4 text-right text-xs uppercase tracking-wider hidden sm:table-cell" style="color:var(--clr-muted)">Streak</th>
+        </tr></thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+    </div>
+  </div><!-- /panel-overview -->
+
+  <!-- ═══════════════════════════════════════════
+       PANEL 2 — AI LESSON
+  ═══════════════════════════════════════════ -->
+  <div id="panel-lesson" class="main-tab-panel hidden space-y-5">
+
+    <!-- Generator Card -->
+    <div class="glass p-6 rounded-2xl">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#6C63FF,#00D4FF)">
+          <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <h3 class="font-bold font-display">AI Lesson Generator</h3>
+          <p class="text-xs" style="color:var(--clr-muted)">Powered by Google Gemini 1.5 Flash</p>
+        </div>
+        <div class="ml-auto hidden sm:flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full"
+             style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);color:#34D399">
+          <i data-lucide="zap" class="w-3 h-3"></i> Live AI
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--clr-muted)">Topic</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 opacity-40 pointer-events-none"><i data-lucide="book" class="w-4 h-4"></i></span>
+            <select id="lesson-topic" class="input-glass pl-9 pr-8 appearance-none cursor-pointer">
+              <option value="Decision Trees">🌲 Decision Trees</option>
+              <option value="Neural Networks">🧠 Neural Networks</option>
+              <option value="Transformers">⚡ Transformers &amp; LLMs</option>
+              <option value="Random Forests">🌳 Random Forests</option>
+              <option value="Reinforcement Learning">🎮 Reinforcement Learning</option>
+              <option value="Convolutional Networks">👁️ Convolutional Networks</option>
+              <option value="K-Means Clustering">🔵 K-Means Clustering</option>
+              <option value="Support Vector Machines">📐 Support Vector Machines</option>
+            </select>
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-40"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:var(--clr-muted)">Learning Level</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 opacity-40 pointer-events-none"><i data-lucide="bar-chart-3" class="w-4 h-4"></i></span>
+            <select id="lesson-level" class="input-glass pl-9 pr-8 appearance-none cursor-pointer">
+              <option value="beginner">🌱 Beginner</option>
+              <option value="intermediate">⚡ Intermediate</option>
+              <option value="advanced">🚀 Advanced</option>
+            </select>
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-40"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+          </div>
+        </div>
+        <div class="flex items-end">
+          <button id="btn-generate" onclick="generateLesson()" class="btn-primary w-full">
+            🤖 Generate Lesson
+          </button>
+        </div>
+      </div>
+
+      <p class="text-xs mt-4" style="color:var(--clr-muted)">
+        💡 Tip: Add your <code class="text-xs px-1 py-0.5 rounded" style="background:rgba(255,255,255,0.08)">GEMINI_API_KEY</code> in <code class="text-xs px-1 py-0.5 rounded" style="background:rgba(255,255,255,0.08)">.env</code> for live AI generation. Without it, curated demo lessons are shown.
+      </p>
+    </div>
+
+    <!-- Lesson Output -->
+    <div id="lesson-output" class="hidden glass p-6 rounded-2xl"></div>
+  </div><!-- /panel-lesson -->
+
+  <!-- ═══════════════════════════════════════════
+       PANEL 3 — MINI-GAME
+  ═══════════════════════════════════════════ -->
+  <div id="panel-game" class="main-tab-panel hidden">
+    <div class="max-w-2xl mx-auto space-y-5">
+
+      <!-- Header -->
+      <div class="glass p-5 rounded-2xl">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#FF6584,#FFD700)">
+            <i data-lucide="filter" class="w-5 h-5 text-white"></i>
+          </div>
+          <div>
+            <h3 class="font-bold font-display">Email Classification Game</h3>
+            <p class="text-xs" style="color:var(--clr-muted)">Classify emails as SPAM 🚨 or HAM ✅ — earn XP for each correct answer</p>
+          </div>
+        </div>
+
+        <!-- Score Row -->
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          <div class="glass p-3 rounded-xl text-center">
+            <p class="text-xs mb-1" style="color:var(--clr-muted)">Score</p>
+            <p id="game-score" class="text-xl font-bold font-display text-gradient">0</p>
+          </div>
+          <div class="glass p-3 rounded-xl text-center">
+            <p class="text-xs mb-1" style="color:var(--clr-muted)">Accuracy</p>
+            <p id="game-accuracy" class="text-xl font-bold font-display" style="color:#34D399">0%</p>
+          </div>
+          <div class="glass p-3 rounded-xl text-center">
+            <p class="text-xs mb-1" style="color:var(--clr-muted)">Remaining</p>
+            <p id="game-remaining" class="text-xl font-bold font-display" style="color:#FBBF24">12</p>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar-track mb-1"><div id="game-progress-bar" class="progress-bar-fill" style="width:0%"></div></div>
+        <p class="text-xs text-right" style="color:var(--clr-muted)"><span id="game-counter">0 / 12</span> emails classified</p>
+      </div>
+
+      <!-- Game Controls -->
+      <div id="game-controls" class="space-y-4">
+        <!-- Email Card -->
+        <div id="game-card" class="glass p-6 rounded-2xl text-center transition-all duration-300"
+             style="border:1px solid var(--clr-border);min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+          <p class="text-xs font-semibold uppercase tracking-wider" style="color:var(--clr-muted)">Subject Line</p>
+          <p id="game-item-text" class="text-base font-semibold leading-relaxed max-w-sm" style="transition:all 0.25s">
+            Loading emails…
+          </p>
+        </div>
+
+        <!-- Feedback -->
+        <p id="game-feedback" class="hidden text-center text-sm font-semibold py-2 rounded-xl"
+           style="background:rgba(255,255,255,0.04);border:1px solid var(--clr-border)"></p>
+
+        <!-- Classify Buttons -->
+        <div class="grid grid-cols-2 gap-4">
+          <button onclick="classifyEmail('ham')" class="btn-primary py-4 text-base"
+                  style="background:linear-gradient(135deg,#34D399,#10B981);box-shadow:0 4px 20px rgba(52,211,153,0.35)">
+            ✅ HAM<br><span class="text-xs font-normal opacity-80">Legitimate Email</span>
+          </button>
+          <button onclick="classifyEmail('spam')" class="btn-primary py-4 text-base"
+                  style="background:linear-gradient(135deg,#EF4444,#DC2626);box-shadow:0 4px 20px rgba(239,68,68,0.35)">
+            🚨 SPAM<br><span class="text-xs font-normal opacity-80">Unwanted Email</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Results Area (shown after game ends) -->
+      <div id="game-results-area" class="hidden glass p-6 rounded-2xl"></div>
+
+    </div>
+  </div><!-- /panel-game -->
+
+  <!-- ═══════════════════════════════════════════
+       PANEL 4 — PROGRESS
+  ═══════════════════════════════════════════ -->
+  <div id="panel-progress" class="main-tab-panel hidden space-y-5">
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <!-- XP Line Chart -->
+      <div class="glass p-5 rounded-2xl">
+        <h3 class="font-bold font-display mb-1">XP Over Time</h3>
+        <p class="text-xs mb-4" style="color:var(--clr-muted)">Your experience points this week</p>
+        <div style="height:220px"><canvas id="xpLineChart"></canvas></div>
+      </div>
+
+      <!-- Module Donut -->
+      <div class="glass p-5 rounded-2xl">
+        <h3 class="font-bold font-display mb-1">Module Completion</h3>
+        <p class="text-xs mb-4" style="color:var(--clr-muted)">Lessons completed vs remaining</p>
+        <div style="height:220px"><canvas id="moduleDonutChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Streak Calendar -->
+    <div class="glass p-5 rounded-2xl">
+      <h3 class="font-bold font-display mb-1">Learning Activity</h3>
+      <p class="text-xs mb-4" style="color:var(--clr-muted)">Your study activity over the past 28 days</p>
+      <div id="streak-calendar"></div>
+    </div>
+
+    <!-- Achievement Badges -->
+    <div class="glass p-5 rounded-2xl">
+      <h3 class="font-bold font-display mb-4">Achievements</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="glass p-4 rounded-xl text-center module-card">
+          <div class="text-3xl mb-2">🔥</div>
+          <p class="text-xs font-bold">First Streak</p>
+          <p class="text-xs mt-1" style="color:var(--clr-muted)">Logged in 3 days</p>
+        </div>
+        <div class="glass p-4 rounded-xl text-center module-card">
+          <div class="text-3xl mb-2">🤖</div>
+          <p class="text-xs font-bold">AI Learner</p>
+          <p class="text-xs mt-1" style="color:var(--clr-muted)">First AI lesson</p>
+        </div>
+        <div class="glass p-4 rounded-xl text-center module-card" style="opacity:0.4">
+          <div class="text-3xl mb-2">🏆</div>
+          <p class="text-xs font-bold">Quiz Master</p>
+          <p class="text-xs mt-1" style="color:var(--clr-muted)">Score 100% on a quiz</p>
+        </div>
+        <div class="glass p-4 rounded-xl text-center module-card" style="opacity:0.4">
+          <div class="text-3xl mb-2">🛡️</div>
+          <p class="text-xs font-bold">Spam Slayer</p>
+          <p class="text-xs mt-1" style="color:var(--clr-muted)">100% accuracy on game</p>
+        </div>
+      </div>
+    </div>
+  </div><!-- /panel-progress -->
+
+  <!-- ═══════════════════════════════════════════
+       PANEL 5 — MODULES
+  ═══════════════════════════════════════════ -->
+  <div id="panel-modules" class="main-tab-panel hidden space-y-5">
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="text-xl font-bold font-display">Learning Modules</h3>
+        <p class="text-sm" style="color:var(--clr-muted)">Pick up where you left off</p>
+      </div>
+      <button onclick="switchMainTab('lesson')" class="btn-primary text-sm px-4 py-2">
+        <i data-lucide="sparkles" class="w-4 h-4"></i> AI Generate
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+
+      <!-- Module Card Template: Decision Trees -->
+      <article class="module-card glass p-0 rounded-2xl overflow-hidden animate-fade-up animate-fade-up-1">
+        <!-- YouTube Thumbnail Placeholder -->
+        <div class="relative cursor-pointer group" style="aspect-ratio:16/9;background:linear-gradient(135deg,#0f0c29,#302b63);overflow:hidden"
+             onclick="window.open('https://www.youtube.com/results?search_query=decision+trees+machine+learning+tutorial','_blank')">
+          <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
+                 style="background:rgba(255,0,0,0.9);box-shadow:0 0 24px rgba(255,0,0,0.5)">
+              <svg viewBox="0 0 24 24" fill="white" width="20" height="20" style="margin-left:3px"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <p class="text-xs text-white font-semibold">Watch: Decision Trees</p>
+          </div>
+          <div class="absolute top-2 right-2 text-xs text-white font-bold px-2 py-0.5 rounded" style="background:rgba(255,0,0,0.9)">YT</div>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between mb-3">
+            <span class="text-2xl">🌲</span>
+            <span class="level-badge level-beginner">Beginner</span>
+          </div>
+          <h4 class="font-bold font-display mb-1">Decision Trees</h4>
+          <p class="text-xs mb-3 leading-relaxed" style="color:var(--clr-muted)">Master branching logic and recursive partitioning. Build interpretable models from scratch.</p>
+          <div class="mb-3">
+            <div class="flex justify-between text-xs mb-1"><span style="color:var(--clr-muted)">Progress</span><span class="font-semibold" style="color:#34D399">6 / 10 lessons</span></div>
+            <div class="progress-bar-track"><div class="progress-bar-fill" style="width:60%;background:linear-gradient(90deg,#34D399,#10B981)"></div></div>
+          </div>
+          <div class="flex flex-wrap gap-1.5 mb-3">
+            <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">Entropy</span>
+            <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">Gini</span>
+            <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">Pruning</span>
+          </div>
+          <button onclick="switchMainTab('lesson')" class="btn-primary w-full text-sm py-2.5"><i data-lucide="play" class="w-3.5 h-3.5"></i> Continue Learning</button>
+        </div>
+      </article>
+
+      <!-- Neural Networks -->
+      <article class="module-card glass p-0 rounded-2xl overflow-hidden animate-fade-up animate-fade-up-2">
+        <div class="relative cursor-pointer group" style="aspect-ratio:16/9;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);overflow:hidden"
+             onclick="window.open('https://www.youtube.com/results?search_query=neural+networks+deep+learning+tutorial','_blank')">
+          <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
+                 style="background:rgba(255,0,0,0.9);box-shadow:0 0 24px rgba(255,0,0,0.5)">
+              <svg viewBox="0 0 24 24" fill="white" width="20" height="20" style="margin-left:3px"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <p class="text-xs text-white font-semibold">Watch: Neural Networks</p>
+          </div>
+          <div class="absolute top-2 right-2 text-xs text-white font-bold px-2 py-0.5 rounded" style="background:rgba(255,0,0,0.9)">YT</div>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between mb-3">
+            <span class="text-2xl">🧠</span>
+            <span class="level-badge level-intermediate">Intermediate</span>
+          </div>
+          <h4 class="font-bold font-display mb-1">Neural Networks</h4>
+          <p class="text-xs mb-3 leading-relaxed" style="color:var(--clr-muted)">Perceptrons, backpropagation, activation functions, and modern deep architectures.</p>
+          <div class="mb-3">
+            <div class="flex justify-between text-xs mb-1"><span style="color:var(--clr-muted)">Progress</span><span class="font-semibold" style="color:#FBBF24">3 / 14 lessons</span></div>
+            <div class="progress-bar-track"><div class="progress-bar-fill" style="width:21%;background:linear-gradient(90deg,#FBBF24,#F59E0B)"></div></div>
+          </div>
+          <div class="flex flex-wrap gap-1.5 mb-3">
+            <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">Backprop</span>
+            <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">ReLU</span>
+            <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">CNN</span>
+          </div>
+          <button onclick="switchMainTab('lesson')" class="btn-primary w-full text-sm py-2.5"><i data-lucide="play" class="w-3.5 h-3.5"></i> Continue Learning</button>
+        </div>
+      </article>
+
+      <!-- Transformers -->
+      <article class="module-card glass p-0 rounded-2xl overflow-hidden animate-fade-up animate-fade-up-3">
+        <div class="relative cursor-pointer group" style="aspect-ratio:16/9;background:linear-gradient(135deg,#1a0533,#3d0c5e,#1a0533);overflow:hidden"
+             onclick="window.open('https://www.youtube.com/results?search_query=transformers+attention+mechanism+explained','_blank')">
+          <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
+                 style="background:rgba(255,0,0,0.9);box-shadow:0 0 24px rgba(255,0,0,0.5)">
+              <svg viewBox="0 0 24 24" fill="white" width="20" height="20" style="margin-left:3px"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <p class="text-xs text-white font-semibold">Watch: Transformers &amp; LLMs</p>
+          </div>
+          <div class="absolute top-2 right-2 text-xs text-white font-bold px-2 py-0.5 rounded" style="background:rgba(255,0,0,0.9)">YT</div>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between mb-3">
+            <span class="text-2xl">⚡</span>
+            <span class="level-badge level-advanced">Advanced</span>
+          </div>
+          <h4 class="font-bold font-display mb-1">Transformers &amp; LLMs</h4>
+          <p class="text-xs mb-3 leading-relaxed" style="color:var(--clr-muted)">Attention mechanisms, BERT, GPT architectures, and fine-tuning large language models.</p>
+          <div class="mb-3">
+            <div class="flex justify-between text-xs mb-1"><span style="color:var(--clr-muted)">Progress</span><span class="font-semibold" style="color:#EF4444">0 / 18 lessons</span></div>
+            <div class="progress-bar-track"><div class="progress-bar-fill" style="width:0%;background:linear-gradient(90deg,#EF4444,#DC2626)"></div></div>
+          </div>
+          <div class="flex flex-wrap gap-1.5 mb-3">
+            <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">Attention</span>
+            <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">BERT</span>
+            <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.06);color:var(--clr-muted)">GPT</span>
+          </div>
+          <button onclick="switchMainTab('lesson')" class="btn-primary w-full text-sm py-2.5" style="background:linear-gradient(135deg,#EF4444,#DC2626);box-shadow:0 4px 18px rgba(239,68,68,0.4)">
+            <i data-lucide="play" class="w-3.5 h-3.5"></i> Start Module
+          </button>
+        </div>
+      </article>
+
+      <!-- Random Forests -->
+      <article class="module-card glass p-0 rounded-2xl overflow-hidden animate-fade-up animate-fade-up-1">
+        <div class="relative cursor-pointer group" style="aspect-ratio:16/9;background:linear-gradient(135deg,#0a2e0a,#1a4a1a);overflow:hidden"
+             onclick="window.open('https://www.youtube.com/results?search_query=random+forest+algorithm+explained','_blank')">
+          <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
+                 style="background:rgba(255,0,0,0.9);box-shadow:0 0 24px rgba(255,0,0,0.5)">
+              <svg viewBox="0 0 24 24" fill="white" width="20" height="20" style="margin-left:3px"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <p class="text-xs text-white font-semibold">Watch: Random Forests</p>
+          </div>
+          <div class="absolute top-2 right-2 text-xs text-white font-bold px-2 py-0.5 rounded" style="background:rgba(255,0,0,0.9)">YT</div>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between mb-3"><span class="text-2xl">🌳</span><span class="level-badge level-beginner">Beginner</span></div>
+          <h4 class="font-bold font-display mb-1">Random Forests</h4>
+          <p class="text-xs mb-3 leading-relaxed" style="color:var(--clr-muted)">Ensemble learning via bagging, feature importance, and OOB error estimation.</p>
+          <div class="mb-3">
+            <div class="flex justify-between text-xs mb-1"><span style="color:var(--clr-muted)">Progress</span><span class="font-semibold" style="color:#34D399">0 / 8 lessons</span></div>
+            <div class="progress-bar-track"><div class="progress-bar-fill" style="width:0%;background:linear-gradient(90deg,#34D399,#10B981)"></div></div>
+          </div>
+          <button class="btn-glass w-full text-sm"><i data-lucide="lock" class="w-3.5 h-3.5"></i> Unlock Module</button>
+        </div>
+      </article>
+
+      <!-- Reinforcement Learning -->
+      <article class="module-card glass p-0 rounded-2xl overflow-hidden animate-fade-up animate-fade-up-2">
+        <div class="relative cursor-pointer group" style="aspect-ratio:16/9;background:linear-gradient(135deg,#1a0a2e,#2e1a4a);overflow:hidden"
+             onclick="window.open('https://www.youtube.com/results?search_query=reinforcement+learning+explained+q-learning','_blank')">
+          <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
+                 style="background:rgba(255,0,0,0.9);box-shadow:0 0 24px rgba(255,0,0,0.5)">
+              <svg viewBox="0 0 24 24" fill="white" width="20" height="20" style="margin-left:3px"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <p class="text-xs text-white font-semibold">Watch: Reinforcement RL</p>
+          </div>
+          <div class="absolute top-2 right-2 text-xs text-white font-bold px-2 py-0.5 rounded" style="background:rgba(255,0,0,0.9)">YT</div>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between mb-3"><span class="text-2xl">🎮</span><span class="level-badge level-intermediate">Intermediate</span></div>
+          <h4 class="font-bold font-display mb-1">Reinforcement Learning</h4>
+          <p class="text-xs mb-3 leading-relaxed" style="color:var(--clr-muted)">Q-learning, policy gradients, reward shaping, and OpenAI Gym environments.</p>
+          <div class="mb-3">
+            <div class="flex justify-between text-xs mb-1"><span style="color:var(--clr-muted)">Progress</span><span class="font-semibold" style="color:#FBBF24">0 / 12 lessons</span></div>
+            <div class="progress-bar-track"><div class="progress-bar-fill" style="width:0%;background:linear-gradient(90deg,#FBBF24,#F59E0B)"></div></div>
+          </div>
+          <button class="btn-glass w-full text-sm"><i data-lucide="lock" class="w-3.5 h-3.5"></i> Unlock Module</button>
+        </div>
+      </article>
+
+      <!-- GANs -->
+      <article class="module-card glass p-0 rounded-2xl overflow-hidden animate-fade-up animate-fade-up-3">
+        <div class="relative cursor-pointer group" style="aspect-ratio:16/9;background:linear-gradient(135deg,#2e0a0a,#4a1a1a);overflow:hidden"
+             onclick="window.open('https://www.youtube.com/results?search_query=generative+adversarial+networks+GAN+explained','_blank')">
+          <div class="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
+                 style="background:rgba(255,0,0,0.9);box-shadow:0 0 24px rgba(255,0,0,0.5)">
+              <svg viewBox="0 0 24 24" fill="white" width="20" height="20" style="margin-left:3px"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <p class="text-xs text-white font-semibold">Watch: Generative AI &amp; GANs</p>
+          </div>
+          <div class="absolute top-2 right-2 text-xs text-white font-bold px-2 py-0.5 rounded" style="background:rgba(255,0,0,0.9)">YT</div>
+        </div>
+        <div class="p-5">
+          <div class="flex items-start justify-between mb-3"><span class="text-2xl">🎨</span><span class="level-badge level-advanced">Advanced</span></div>
+          <h4 class="font-bold font-display mb-1">Generative AI &amp; GANs</h4>
+          <p class="text-xs mb-3 leading-relaxed" style="color:var(--clr-muted)">Diffusion models, VAEs, and adversarial training for image and text generation.</p>
+          <div class="mb-3">
+            <div class="flex justify-between text-xs mb-1"><span style="color:var(--clr-muted)">Progress</span><span class="font-semibold" style="color:#EF4444">0 / 16 lessons</span></div>
+            <div class="progress-bar-track"><div class="progress-bar-fill" style="width:0%;background:linear-gradient(90deg,#EF4444,#DC2626)"></div></div>
+          </div>
+          <button class="btn-glass w-full text-sm"><i data-lucide="lock" class="w-3.5 h-3.5"></i> Unlock Module</button>
+        </div>
+      </article>
+
+    </div>
+  </div><!-- /panel-modules -->
+
+  </div><!-- /max-w -->
+  </div><!-- /scroll -->
+</div><!-- /main -->
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ═══════════════ CORE DASHBOARD SCRIPT ═══════════════ -->
+<script>
+  // ── Auth guard ──────────────────────────────────────────
+  const token   = localStorage.getItem('aile_token');
+  const student = JSON.parse(localStorage.getItem('aile_student') || 'null');
+  if (!token || !student) { window.location.replace('/'); throw new Error('Not authenticated'); }
+
+  const API = window.location.origin + '/api';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    lucide.createIcons();
+    populateUI();
+    drawRadar();
+    renderLeaderboard();
+  });
+  if (document.readyState !== 'loading') {
+    lucide.createIcons();
+    populateUI();
+    drawRadar();
+    renderLeaderboard();
+  }
+
+  // ── Populate UI ──────────────────────────────────────────
+  function populateUI() {
+    if (!student) return;
+    document.getElementById('header-name').textContent  = student.name.split(' ')[0];
+    document.getElementById('sidebar-name').textContent = student.name;
+    document.getElementById('avatar').textContent       = student.name.charAt(0).toUpperCase();
+    const lvlEl = document.getElementById('sidebar-level');
+    lvlEl.textContent = cap(student.level || 'beginner');
+    lvlEl.className   = `level-badge level-${student.level || 'beginner'}`;
+    const xp     = student.xp     || 0;
+    const streak = student.streak || 0;
+    ['xp-count','stat-xp'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=xp; });
+    ['streak-count','stat-streak'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=streak; });
+    const h = new Date().getHours();
+    document.getElementById('time-greeting').textContent = h<12?'morning':h<17?'afternoon':'evening';
+    document.getElementById('header-date').textContent   = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    updateProgressBars(student.progress || []);
+  }
+
+  function cap(s) { return s ? s.charAt(0).toUpperCase()+s.slice(1) : ''; }
+
+  function updateProgressBars(prog) {
+    const beg  = prog.filter(p=>p.moduleId==='decision-trees'||p.moduleId==='random-forests');
+    const mid  = prog.filter(p=>p.moduleId==='neural-networks'||p.moduleId==='reinforcement-learning');
+    const adv  = prog.filter(p=>p.moduleId==='transformers'||p.moduleId==='gans');
+    const pct  = arr => { const c=arr.reduce((a,p)=>a+p.completed,0),t=arr.reduce((a,p)=>a+p.total,0); return t?Math.round(c/t*100):0; };
+    const set  = (suf,arr) => {
+      const p=pct(arr),c=arr.reduce((a,x)=>a+x.completed,0),t=arr.reduce((a,x)=>a+x.total,0);
+      const bar=document.getElementById(`prog-${suf}-bar`),pctEl=document.getElementById(`prog-${suf}-pct`),txt=document.getElementById(`prog-${suf}-txt`);
+      if(bar) bar.style.width=p+'%'; if(pctEl) pctEl.textContent=p+'%'; if(txt) txt.textContent=`${c} / ${t} lessons`;
+    };
+    set('beginner',beg); set('inter',mid); set('adv',adv);
+    const all = pct(prog);
+    const ob=document.getElementById('overall-bar'),op=document.getElementById('overall-pct');
+    if(ob) ob.style.width=all+'%'; if(op) op.textContent=all+'%';
+  }
+
+  // ── Radar Chart ──────────────────────────────────────────
+  function drawRadar() {
+    const ctx = document.getElementById('radarChart');
+    if (!ctx) return;
+    new Chart(ctx, {
+      type:'radar',
+      data:{
+        labels:['Decision Trees','Neural Nets','NLP','Computer Vision','RL','Statistics'],
+        datasets:[
+          { label:'Your Skills', data:[60,21,15,10,0,45], backgroundColor:'rgba(108,99,255,0.2)', borderColor:'#6C63FF', borderWidth:2,
+            pointBackgroundColor:'#00D4FF', pointBorderColor:'#fff', pointRadius:5, pointHoverRadius:7 },
+          { label:'Peer Avg', data:[45,35,30,25,20,55], backgroundColor:'rgba(0,212,255,0.07)', borderColor:'rgba(0,212,255,0.4)',
+            borderWidth:1.5, borderDash:[5,5], pointRadius:3, pointBackgroundColor:'rgba(0,212,255,0.6)' }
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        scales:{ r:{ min:0,max:100, ticks:{display:false}, grid:{color:'rgba(255,255,255,0.06)'}, angleLines:{color:'rgba(255,255,255,0.06)'},
+          pointLabels:{color:'rgba(226,232,240,0.7)',font:{size:10,family:'Inter'}} } },
+        plugins:{ legend:{labels:{color:'rgba(226,232,240,0.6)',boxWidth:12,font:{size:10}}},
+          tooltip:{backgroundColor:'rgba(10,14,26,0.9)',borderColor:'rgba(108,99,255,0.4)',borderWidth:1} }
+      }
+    });
+  }
+
+  // ── Leaderboard ──────────────────────────────────────────
+  function renderLeaderboard() {
+    const data = [
+      {rank:1, name:'Aria Johnson',   level:'advanced',     xp:2840, streak:28, emoji:'🥇'},
+      {rank:2, name:'Marco Silva',    level:'advanced',     xp:2510, streak:21, emoji:'🥈'},
+      {rank:3, name:'Yuki Tanaka',    level:'intermediate', xp:1980, streak:14, emoji:'🥉'},
+      {rank:4, name:'Priya Patel',    level:'intermediate', xp:1620, streak:9,  emoji:'4️⃣'},
+      {rank:5, name:'Alex Kim',       level:'beginner',     xp:980,  streak:5,  emoji:'5️⃣'},
+      {rank:12, name:student?.name||'You', level:student?.level||'beginner', xp:student?.xp||0, streak:student?.streak||0, emoji:'👤', isMe:true}
+    ];
+    const tbody = document.getElementById('leaderboard-body');
+    if (!tbody) return;
+    tbody.innerHTML = data.map(r=>`
+      <tr style="border-bottom:1px solid var(--clr-border);${r.isMe?'background:rgba(108,99,255,0.08)':''}" class="hover:bg-white/5 transition-colors">
+        <td class="p-4 font-bold text-base">${r.emoji}</td>
+        <td class="p-4"><div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style="background:linear-gradient(135deg,#6C63FF,#FF6584)">${r.name.charAt(0)}</div>
+          <span class="font-semibold text-sm ${r.isMe?'text-gradient':''}">${r.name}</span>
+        </div></td>
+        <td class="p-4 hidden sm:table-cell"><span class="level-badge level-${r.level}">${cap(r.level)}</span></td>
+        <td class="p-4 text-right font-bold text-sm" style="color:#FFD700">⚡ ${r.xp.toLocaleString()}</td>
+        <td class="p-4 text-right font-semibold text-sm hidden sm:table-cell" style="color:#FF6B6B">🔥 ${r.streak}d</td>
+      </tr>`).join('');
+  }
+
+  // ── Sidebar nav sync ─────────────────────────────────────
+  function _syncSidebarNav(tabId) {
+    document.querySelectorAll('[id^="snav-"]').forEach(b => b.classList.remove('active'));
+    const sn = document.getElementById('snav-' + tabId);
+    if (sn) sn.classList.add('active');
+  }
+  // Wrap switchMainTab to also sync sidebar
+  const _origSwitch = window.switchMainTab;
+  window.switchMainTab = function(tabId) {
+    _origSwitch(tabId);
+    _syncSidebarNav(tabId);
+    // Close mobile sidebar
+    document.getElementById('sidebar').classList.remove('open');
+  };
+
+  // ── Toast ─────────────────────────────────────────────────
+  function showToast(msg, type='success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.className=`show ${type}`;
+    setTimeout(()=>el.className='',3500);
+  }
+
+  // ── Logout ────────────────────────────────────────────────
+  function logout() {
+    localStorage.removeItem('aile_token');
+    localStorage.removeItem('aile_student');
+    window.location.replace('/');
+  }
+</script>
+
+<!-- ═══════════════ QUIZ / GAME / CHARTS SCRIPT ═══════════════ -->
+<script src="quiz-logic.js"></script>
+</body>
+</html>
