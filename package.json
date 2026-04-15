@@ -11,10 +11,11 @@
     "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.4.0"
+    "mongoose": "^8.23.0",
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "mongodb-memory-server": "^11.0.1",
@@ -28,5 +29,13 @@
     "glassmorphism"
   ],
   "author": "AI-Learn Explorer Team",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vaishnav-26/vibethon-Visioncoders-116.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Vaishnav-26/vibethon-Visioncoders-116/issues"
+  },
+  "homepage": "https://github.com/Vaishnav-26/vibethon-Visioncoders-116#readme"
 }
